@@ -1,0 +1,7 @@
+{
+  "source": "https://raw.githubusercontent.com/plotly/datasets/master/finance-charts-apple.csv",
+  "retrieved_utc": "2026-10-29",
+  "sha256": "24c7604edfd5afe862ddb9f9535e2fd7351f43711bfc442bca52055e15e37bcd",
+  "selection": "AAPL.Close: nominal historical close, not AAPL.Adjusted",
+  "note": "Original CSV retained unchanged. Source branch may change; bundled checksum identifies this experiment. Data provided for educational demonstration; consult upstream data-use terms."
+}

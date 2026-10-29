@@ -1,0 +1,26 @@
+{
+  "ticker": "AAPL",
+  "seed": 42,
+  "lookback": 20,
+  "requested_epochs": 40,
+  "completed_epochs": 13,
+  "best_epoch": 6,
+  "rows": 506,
+  "split_boundaries": [
+    354,
+    430
+  ],
+  "date_range": [
+    "2015-02-17",
+    "2017-02-16"
+  ],
+  "sample_counts": {
+    "train": 334,
+    "validation": 76,
+    "test": 76
+  },
+  "data_sha256": "24c7604edfd5afe862ddb9f9535e2fd7351f43711bfc442bca52055e15e37bcd",
+  "tensorflow": "2.18.1",
+  "numpy": "2.0.2",
+  "protocol": "Rolling one-step forecasts using observed previous closes; no recursive forecasts."
+}
