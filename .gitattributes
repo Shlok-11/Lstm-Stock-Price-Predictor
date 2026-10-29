@@ -1,0 +1,2 @@
+# Preserve the downloaded historical CSV bytes and recognize its CRLF endings.
+data/aapl_history.csv -text whitespace=cr-at-eol
