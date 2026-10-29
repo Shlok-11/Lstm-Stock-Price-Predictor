@@ -73,3 +73,41 @@ Regenerate the notebook from the tested source with `python scripts/build_notebo
 ## Reference and attribution
 
 Inspired by [Syed-Waheed/stock-price-prediction-lstm](https://github.com/Syed-Waheed/stock-price-prediction-lstm), inspected at commit `6ef969243d33e40077304fcb72b75e39c8d78939`. Architecture and workflow were independently implemented for this project; reference performance claims and trained models were not reused. The reference's [MIT license notice](docs/REFERENCE_LICENSE.txt) is retained for attribution. Dataset provenance is documented separately.
+
+## Controlled COVID-era ablation — prepared, real-data run blocked
+
+The existing dataset has **506 observations from 2015-02-17 through 2017-02-16 and no 2020 data**. The historical results above predate COVID and cannot establish a COVID-volatility effect. They, their dataset, plots, CSVs, metadata and ZIP have been preserved. No COVID model scores or winning regime have been measured or inferred.
+
+On 2026-10-29, this cloud environment's configured proxy rejected real AAPL history from `query1.finance.yahoo.com` with **HTTP 403 CONNECT**. The standalone notebook's yfinance request also failed with a 403 tunnel response. **Data access is blocked; TensorFlow training works.** No synthetic prices were used as substitute market evidence.
+
+Open the new standalone [`COVID_Exclusion_Experiment.ipynb`](notebooks/COVID_Exclusion_Experiment.ipynb) in Google Colab and Run all on a CPU runtime with Internet access. It downloads a single consistent Yahoo-adjusted AAPL series; alternatively upload a complete, consistently adjusted `Date,Close` CSV and set `CSV_PATH` in its configuration cell. The original notebook remains the historical demonstration, with all its existing executed cells preserved. Hosted Colab itself has not been tested.
+
+The new experiment uses a **separate predeclared schedule**, because the original 2016–2017 holdouts occur before the intervention:
+
+| Variant | Eligible training observations | Validation | Test |
+|---|---|---|---|
+| `with_2020` | 2015–2022, including 2020 | 2023 calendar year | 2024 calendar year |
+| `exclude_2020` | 2015–2022, excluding every window touching 2020 | Same dates | Same dates |
+| `post_2020` | 2021–2022 only, if ≥252 training windows | Same dates | Same dates |
+
+`with_2020` uses the original **architecture**, not the historical fitted model: LSTM(32, return_sequences=True) → LSTM(16) → Dense(1). “Post-2020” is an operational date definition, not a claim that COVID ended in 2020. The original dataset and historical metrics must not be mixed with this new adjusted-price experiment.
+
+Controls and outputs:
+
+- Identical 20-session lookback, Adam 0.001, batch size 32, ordered samples, 40-epoch budget, patience 7 and paired seeds 42/43/44 across regimes. No test-driven tuning.
+- Fit each scaler using only that regime's eligible training observations. Construct windows against the original timeline; every training context **and target** must be eligible. No December-2019/January-2021 splice or future target in its context. Reject source outages longer than seven calendar days for investigation; require complete daily trading data and do not impute missing prices.
+- All regimes use exactly the same validation/test targets and rolling one-step inputs. Earlier realized holdout closes are valid context. No recursive multi-day forecast is claimed.
+- Restore checkpoints by validation loss. Choose the training regime using **mean validation MSE in price units across all three fixed seeds**, then persist `selection.json` before test prediction. Report every seed rather than selecting the best seed.
+- Compare MSE, RMSE, MAE, R² and directional accuracy against identical previous-close forecasts. Export per-seed scores and mean/std, predictions, input snapshot/checksum, training histories, scaler parameters, models and validation selection. Directional accuracy retains the historical zero-change convention described above.
+- Each invocation requires a new output directory and refuses to overwrite earlier results. Existing historical artifacts are never used as the output destination.
+
+For a real local CSV in the pinned environment:
+
+```bash
+source /workspace/venvs/lstm/bin/activate
+python -m experiments.covid_ablation --csv path/to/aapl_2015_2024.csv --output artifacts/covid/run_001
+```
+
+**Verified checks:** `python -m pytest -q` → **14 passed** (8 existing + 6 new), including three-regime one-epoch synthetic training/export, identical holdout dates, no windows crossing the excluded year, training-only scaling, validation selection, insufficient-data handling and overwrite protection. Synthetic test scores are not financial results. `uv pip check` passed for the repository's pinned environment. All six code cells of the new standalone notebook executed locally and correctly recorded **NOT RUN** for the blocked market experiment. Existing historical experiment outputs were not regenerated.
+
+**Interpretation after a real run:** removal of 2020 changes training size and distribution as well as exposure to volatility. A performance difference is sensitivity to the training regime, not causal proof of COVID's impact. Post-2020 data may still include pandemic effects. Three seeds do not establish statistical significance; adjusted historical prices are not a point-in-time vintage. Report losses to persistence openly. Do not change this protocol after observing test scores. Once the real-data run completes, append its verified metrics and provenance here without replacing the historical table.
